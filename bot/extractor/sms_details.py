@@ -5,32 +5,25 @@ class SMSDetails:
 
     def __init__(self, text: str) -> None:
         self.text = text
-        self.pattern = re.compile(
-            r"USER:\s*(?P<user>.*?)\n\s*(?:EMAIL:\s*(?P<email>.*?)\n\s*)?SID:\s*(?P<sid>.*)\n\s*PHONE:\s*(?P<phone>.*)\n\s*Message:\s*(?P<message>.*?)(?:\n\s*Image:|$)",
-            re.DOTALL | re.IGNORECASE
-        )
+    
         self.sid = ''
         self.sms_details_response = ''
 
-    def text_match(self) -> bool:
-        return  self.pattern.search(self.text)
-
     def crop_out_content(self) -> str:
-        match = self.text_match()
-        if match:
-            initial_phone_numbers = match.group('phone').strip()
-            phones = re.findall(r"\+?\d[\d\s().-]*\d", initial_phone_numbers)
-            phone = " ".join(
-                re.sub(r"(?<!^)\+|[^\d+]", "", p)
-                for p in phones
-            )
-            extracted_content = {
-                'phone_number': phone,
-                "message" : match.group("message").strip(),
-                "sid": match.group('sid').strip()
-            }
+        sid_match = re.search(r"\*{0,2}SID:\*{0,2}\s*`?([^`\n]*)`?", self.text, re.I)
+        phone_match = re.search(r"\*{0,2}PHONE:\*{0,2}\s*`?([^`\n]*)`?", self.text, re.I)
+        message_match = re.search(r"\*{0,2}Message:\*{0,2}\s*`?([^`\n]*)`?", self.text, re.I)
+        route_match = re.search(r"\*{0,2}ROUTE_ID:\*{0,2}\s*`?([^`\n]*)`?", self.text, re.I)
 
-            return extracted_content
+        extracted_content = {
+            "phone_number": phone_match.group(1).strip() if phone_match else "",
+            "message": message_match.group(1).strip() if message_match else "",
+            "sid": sid_match.group(1).strip() if sid_match else "",
+            "route_id": route_match.group(1).strip() if route_match else "none"
+        }
+
+        print(extracted_content)
+        return extracted_content
             
     def sms_details_composer(self) -> str:
         sms_details = self.crop_out_content()
@@ -59,7 +52,8 @@ class SMSDetails:
                 return {
                     'phone_number': fixed_number,
                     "message" : sms_details['message'],
-                    "sid": self.sid
+                    "sid": self.sid,
+                    'route_id': sms_details['route_id']
                 }
                 
             except ValueError:

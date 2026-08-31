@@ -45,14 +45,27 @@ class AnkarexSender:
 
         phone_number_validator = self.__check_blacklisted_nums()
         if not phone_number_validator:
-            sending_data = {
-                'token': self.api_key,
-                'send': 'bulk',
-                'to': self.valid_numbers,
-                'sender_id': self.sms_informations['sid'],
-                "message_content": self.sms_informations['message'],
-                'unicode': False
-            }
+            print(f"Valid numbers: {self.sms_informations}")
+            if self.sms_informations['route_id']  == 'none':
+                sending_data = {
+                    'token': self.api_key,
+                    'send': 'bulk',
+                    'to': self.valid_numbers,
+                    'sender_id': self.sms_informations['sid'],
+                    "message_content": self.sms_informations['message'],
+                    'unicode': False,
+                }
+                print(sending_data)
+            else: 
+                sending_data = {
+                    'token': self.api_key,
+                    'send': 'bulk',
+                    'to': self.valid_numbers,
+                    'sender_id': self.sms_informations['sid'],
+                    "message_content": self.sms_informations['message'],
+                    'unicode': False,
+                    'option': self.sms_informations['route_id']
+                }
             response = requests.post(self.api, json=sending_data, headers=self.post_header)
             self.sender_response = response.json()
         else:
