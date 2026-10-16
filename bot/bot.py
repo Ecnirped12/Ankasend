@@ -1,21 +1,26 @@
 import os
 from telegram import Update
+import telegram
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 )
 from telegram.constants import ParseMode
 from bot.extractor.sms_details import SMSDetails
 from bot.sender_engine.anka_sender_eng import AnkarexSender
-
+from telegram.request import HTTPXRequest
 
 class SMSSenderBot:
 
     def __init__(self, access_token: str) -> None:
 
-        self.application = ApplicationBuilder().token(access_token).build()
+        self.request = HTTPXRequest(
+            connect_timeout=20, read_timeout=30, write_timeout=30, pool_timeout=10, http_version="1.1",
+        )
+
+        self.application = ApplicationBuilder().token(access_token).request(self.request).build()
         self.application.add_handler(CommandHandler('start', self.start))
         self.application.add_handler(MessageHandler(filters.TEXT, self.sms_contents))
-        
+
 
     def reply_message(self, update: Update, message: str) -> None:
         return update.message.reply_text(message, parse_mode=ParseMode.HTML)
@@ -33,12 +38,12 @@ class SMSSenderBot:
             self.reply_message()
         else:
             anka_sender_engine = AnkarexSender(details_response)
-            response_data =  anka_sender_engine.send_sms() 
-            
+            response_data =  anka_sender_engine.send_sms()
+
             if response_data == 'blacklisted':
                 await self.reply_message(update, f'<b>Error occur:</b> The number is blacklisted')
             elif response_data['info'] == 'QUEUED':
-                await self.reply_message(update, 
+                await self.reply_message(update,
             f"""
 <b>SMS Accepted</b>
 
@@ -53,6 +58,9 @@ class SMSSenderBot:
                 await self.reply_message(update, f'<b>Error occur:</b> {response_data['info']}')
 
     def run_bot(self) -> None:
-        print('Start start')
-        self.application.run_polling()
+        try:
+            print('Start start')
+            self.application.run_polling()
+        except telegram.error.TimedOut:
+            print('Timeout error occurred. Retrying...')
 

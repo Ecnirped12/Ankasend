@@ -39,6 +39,7 @@ class AnkarexSender:
                 return True
             else:
                 self.valid_numbers += number +','
+                print(self.valid_numbers)
 
 
     def send_sms(self) -> None:
@@ -55,8 +56,7 @@ class AnkarexSender:
                     "message_content": self.sms_informations['message'],
                     'unicode': False,
                 }
-                print(sending_data)
-            else: 
+            else:
                 sending_data = {
                     'token': self.api_key,
                     'send': 'bulk',
