@@ -47,7 +47,7 @@ class MessageParser:
         )
 
         response = request.json()
-        print("response:", response)
+        print("response: ", response)
         return response["data"]["valid"]
 
 

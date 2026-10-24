@@ -9,6 +9,7 @@ from telegram.constants import ParseMode
 from bot.extractor.sms_details import SMSDetails
 from bot.sender_engine.anka_sender_eng import AnkarexSender
 from telegram.request import HTTPXRequest
+from telegram.constants import ChatAction
 
 load_dotenv()
 
@@ -53,6 +54,10 @@ class SMSSenderBot(AnkarexSender, SMSDetails):
                 "Unable to identify the SMS details."
             )
         else:
+            await context.bot.send_chat_action(
+                chat_id=update.effective_chat.id,
+                action=ChatAction.TYPING
+            )
             self.serve_routes_worker()
             # fetch_available_routes from MessageParge
             if self.route_found:
@@ -95,18 +100,21 @@ class SMSSenderBot(AnkarexSender, SMSDetails):
                             f'<b>ERROR DETAIL: </b> {response["detail"]}'
                         ))
                     case _:
-                        print("Found")
                         pass
     async def handle_routes_button(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         query = update.callback_query
         await query.answer()
 
-        print("Processing")
+        print("Processing..")
 
         sms_contents = context.user_data.get("message_contents", "")
         channels = context.user_data.get("route_options", "")
 
         if (query.data):
+            await context.bot.send_chat_action(
+                chat_id=update.effective_chat.id,
+                action=ChatAction.TYPING
+            )
             routes_id_list = [query.data] if query.data != "All Route" else  [channel["option_id"] for channel in channels]
 
             for route_id in routes_id_list:
@@ -117,25 +125,24 @@ class SMSSenderBot(AnkarexSender, SMSDetails):
                     case "data":
                         if self.sender_response['data']["status"] == 'queued':
                             message = (
-                                f"<b>SMS Accepted</b>\n"
-                                f"<b>Status</b>: <b>SENT</b>\n"
-                                f"<b>Batch ID</b>: <code>{self.sender_response['data']['batch_id']}</code>\n"
-                                f"<b>Recipients </b>: {self.sender_response['data']['sender_ids_effective'][0]['recipients']}\n"
-                                f"<b>Cost</b>: ${self.sender_response['data']['estimated_cost']}\n"
+                                f"<b>SMS ACCEPTED</b>\n\n"
+                                f"<b>STATUS</b>: <b>SENT</b>\n\n"
+                                f"<b>BATCH ID</b>: <code>{self.sender_response['data']['batch_id']}</code>\n\n"
+                                f"<b>RECIPIENTS </b>: {self.sender_response['data']['sender_ids_effective'][0]['recipients']}\n\n"
+                                f"<b>COST</b>: ${self.sender_response['data']['estimated_cost']}\n"
                             )
                             await self.reply_message(update, message)
                     case "error":
                         response = self.sender_response["error"]["fields"][0]["message"]
                         await self.reply_message(update, f'<b>Error occur:</b> {response}')
                     case _:
-                        print("Found")
                         pass
         else:
             print("Query_value", query.data)
 
     def run_bot(self) -> None:
         try:
-            print('Start start')
+            print('SERVER start')
             self.application.run_polling(allowed_updates=Update.ALL_TYPES)
         except telegram.error.TimedOut:
             print('Timeout error occurred. Retrying...')

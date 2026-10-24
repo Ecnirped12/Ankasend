@@ -11,17 +11,19 @@ class SMSDetails:
     def crop_out_content(self) -> str:
         sid_match = re.search(r"\*{0,2}SID:\*{0,2}\s*`?([^`\n]*)`?", self.content, re.I)
         phone_match = re.search(r"\*{0,2}PHONE:\*{0,2}\s*`?([^`\n]*)`?", self.content, re.I)
-        message_match = re.search(r"\*{0,2}Message:\*{0,2}\s*`?([^`\n]*)`?", self.content, re.I)
+        message_match = re.search(
+            r"\*{0,2}Message:\*{0,2}\s*`?(.*?)`?\s*(?=^\s*\*{0,2}(?:Image|SID|PHONE|CAMPAIGN|D_USER):|\Z)",
+            self.content,
+            re.I | re.S | re.M,
+        )
         route_match = re.search(r"\*{0,2}ROUTE_ID:\*{0,2}\s*`?([^`\n]*)`?", self.content, re.I)
-        # sid_match.group(1).strip() if sid_match else "",
+
         extracted_content = {
             "phone_number": phone_match.group(1).strip() if phone_match else "",
-            "message": message_match.group(1).strip() if message_match else "",
-            "sid": "AKILANA0",
+            "message": message_match.group(1).strip() if message_match else None,
+            "sid": sid_match.group(1).strip() if sid_match else "",
             "route_id": route_match.group(1).strip() if route_match else "none"
         }
-
-        print(extracted_content)
         return extracted_content
 
     def sms_details_composer(self) -> str:
@@ -43,7 +45,8 @@ class SMSDetails:
                 sid =  ''.join(digits)
 
                 if sms_details['sid'] == '' or sms_details['sid'] == 'None':
-                    self.sid = sid
+                    self.sid = f'dh2i{sid[2:4]}'
+                    print(f'[SID]: {self.sid}')
                 else:
                     self.sid = sms_details['sid']
 

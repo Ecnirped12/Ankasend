@@ -53,7 +53,7 @@ class AnkarexSender(MessageParser):
 
     def send_message(self, route_option: str, sms_contents) -> str:
         phone_number_validator = self.__check_blacklisted_nums()
-        print(route_option)
+        print(F'[ROUT_OPTION]: {route_option}')
         if phone_number_validator:
             idempotency_key = generate_idempotency_key()
             headers = {
