@@ -18,14 +18,14 @@ class SMSSenderBot(AnkarexSender, SMSDetails):
     def __init__(self, access_token: str) -> None:
         self.api_key = os.getenv('API_KEY')
         self.api = os.getenv('API')
-        self.request = HTTPXRequest(
-            connect_timeout=60, read_timeout=60, write_timeout=60, pool_timeout=60, http_version="1.1",
-        )
+        # self.request = HTTPXRequest(
+        #     connect_timeout=60, read_timeout=60, write_timeout=60, pool_timeout=60, http_version="1.1",
+        # )
         self.content: str = ""
         self.keyboard = []
         self.row = []
         self.sms_detail = None
-        self.application = ApplicationBuilder().token(access_token).request(self.request).build()
+        self.application = ApplicationBuilder().token(access_token).build()
         self.application.add_handler(CommandHandler('start', self.start))
         self.application.add_handler(MessageHandler(filters.TEXT, self.sms_contents))
         self.application.add_handler(CallbackQueryHandler(self.handle_routes_button))
