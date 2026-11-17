@@ -19,7 +19,7 @@ class SMSSenderBot(AnkarexSender, SMSDetails):
         self.api_key = os.getenv('API_KEY')
         self.api = os.getenv('API')
         self.request = HTTPXRequest(
-            connect_timeout=20, read_timeout=30, write_timeout=30, pool_timeout=10, http_version="1.1",
+            connect_timeout=60, read_timeout=60, write_timeout=60, pool_timeout=60, http_version="1.1",
         )
         self.content: str = ""
         self.keyboard = []
